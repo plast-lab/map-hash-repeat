@@ -8,7 +8,7 @@
     <ProjectGuid>{7305971b-ad13-43ff-baf4-1e073d8a45bf}</ProjectGuid>
     <OutputType>Library</OutputType>
     <RootNamespace>Nessos.MBrace.MapReduceDemo</RootNamespace>
-    <AssemblyName>Demos</AssemblyName>
+    <AssemblyName>algorithm.map-reduce</AssemblyName>
     <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
     <Name>algorithm.map-reduce</Name>
     <SccProjectName>SAK</SccProjectName>

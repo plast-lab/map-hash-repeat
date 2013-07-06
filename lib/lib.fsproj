@@ -8,7 +8,7 @@
     <ProjectGuid>{255737aa-9364-4e25-88e1-ec3e3acc650d}</ProjectGuid>
     <OutputType>Library</OutputType>
     <RootNamespace>Nessos.MBrace.Lib</RootNamespace>
-    <AssemblyName>Nessos.MBrace.Lib</AssemblyName>
+    <AssemblyName>lib</AssemblyName>
     <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
     <Name>lib</Name>
     <SccProjectName>
