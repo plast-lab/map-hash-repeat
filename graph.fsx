@@ -9,7 +9,7 @@ let insert g n =
     | G(nodes) -> G(List.append nodes [n])
     | Empty -> G([n])
         
-//gets two nodes and make
+//gets two nodes and make edge
 let connect n1 n2 = 
     match n1,n2 with
     | N(v1,neighbors1), N(v2,_)  -> N(v1,List.append neighbors1 [v2])
