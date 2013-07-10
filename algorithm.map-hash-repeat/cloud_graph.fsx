@@ -36,23 +36,37 @@ let insert (g : ICloudRef<Graph>) (n : ICloudRef<Node>) =
     }
 
 [<Cloud>]
-let graph = 
+let graph () = 
     cloud {
         return! newRef <| Empty
     }
 
-         
+
 [<Cloud>]
-let createGraph createNode insert graph = 
+let createGraph n insert graph = 
     cloud {
-        let! n = createNode (0,[])  
         return! insert graph n
     }
+            
+[<Cloud>]
+let createGraphDefault createNode insert graph = 
+    cloud {
+        let! n = createNode (0,[])  
+        return! createGraph n insert graph
+    }
+
+
     
 // create a local-only runtime
-let runtime = MBrace.InitLocal 4
+let runtime = MBrace.InitLocal 16
 
 // upload & execute
-let proc = runtime.CreateProcess <@ createGraph CloudNode insert graph @> 
+let graphResCloud = runtime.CreateProcess <@ graph() @>
+let graphRes = graphResCloud.AwaitResult()
+let proc = runtime.CreateProcess <@ createGraphDefault CloudNode insert graphRes @> 
 
 let graphCloudRef = proc.AwaitResult()
+
+let constructedGraph = graphCloudRef.Value
+
+// let proc = runtime.CreateProcess <@ createGraph  insert constructedGraph @> 
