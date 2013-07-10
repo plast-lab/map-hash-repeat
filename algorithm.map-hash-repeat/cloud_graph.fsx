@@ -1,3 +1,18 @@
+
+// BEGIN PREAMBLE -- do not evaluate, for intellisense only
+#r "Nessos.MBrace.Utils"
+#r "Nessos.MBrace.Actors"
+#r "Nessos.MBrace.Base"
+#r "Nessos.MBrace.Store"
+#r "Nessos.MBrace.Client"
+
+open Nessos.MBrace.Client
+// END PREAMBLE
+
+#r "../lib/bin/Debug/Nessos.MBrace.Lib.dll"
+open Nessos.MBrace.Lib
+open Nessos.MBrace.Lib.MapReduce
+
 type Node = N of int * List<int>
 
 type Graph = 

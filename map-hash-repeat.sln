@@ -5,7 +5,7 @@ Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "algorithm.map-hash-repeat",
 EndProject
 Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "algorithm.map-reduce", "algorithm.map-reduce\algorithm.map-reduce.fsproj", "{7305971B-AD13-43FF-BAF4-1E073D8A45BF}"
 EndProject
-Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "lib", "lib\lib.fsproj", "{255737AA-9364-4E25-88E1-EC3E3ACC650D}"
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Nessos.MBrace.Lib", "lib\Nessos.MBrace.Lib.fsproj", "{255737AA-9364-4E25-88E1-EC3E3ACC650D}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

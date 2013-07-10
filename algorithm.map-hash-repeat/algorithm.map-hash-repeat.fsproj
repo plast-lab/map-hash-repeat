@@ -42,6 +42,8 @@
   <ItemGroup>
     <Compile Include="Utils.fs" />
     <None Include="mapreduce.fsx" />
+    <None Include="cloud_graph.fsx" />
+    <None Include="graph.fsx" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="mscorlib" />
