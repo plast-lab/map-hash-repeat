@@ -48,11 +48,11 @@ let createGraph createNode insert graph =
         let! n = createNode (0,[])  
         return! insert graph n
     }
-
-
-
+    
 // create a local-only runtime
 let runtime = MBrace.InitLocal 4
 
 // upload & execute
-runtime.Run <@ createGraph CloudNode insert graph @> 
+let proc = runtime.CreateProcess <@ createGraph CloudNode insert graph @> 
+
+let graphCloudRef = proc.AwaitResult()
