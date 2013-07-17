@@ -19,6 +19,21 @@ let cloudNode node =
         return! newRef <| N(node)
     }
 
+
+[<Cloud>]
+let demo (number: int) : ICloud<int> =
+    cloud {
+        let! num =  
+            cloud { return 1+1 } 
+            <|>
+            cloud { 
+                Cloud.OfAsync <| Async.Sleep 5000
+                return 1}
+       
+        return! cloud { return num + number + 1 }
+    }           
+
+
 [<Cloud>]
 let addNeighbor (node1 : ICloudRef<Node<'T>>) (node2 : ICloudRef<Node<'T>>)  =
     cloud {
@@ -42,7 +57,7 @@ let n5 = (5,[])
 
 // create a local-only runtime
 let runtime = MBrace.InitLocal 4
-
+runtime.Run <@ demo 13 @>
 let n1' = runtime.CreateProcess <@ cloudNode n1 @>
 let n2' = runtime.CreateProcess <@ cloudNode n2 @>
 let n3' = runtime.CreateProcess <@ cloudNode n3 @>
