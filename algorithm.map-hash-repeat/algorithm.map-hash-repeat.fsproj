@@ -44,6 +44,7 @@
     <None Include="mapreduce.fsx" />
     <None Include="cloud_graph.fsx" />
     <None Include="graph.fsx" />
+    <None Include="cloud_graph2.fsx" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="mscorlib" />

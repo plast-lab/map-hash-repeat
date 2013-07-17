@@ -5,16 +5,13 @@
 #r "Nessos.MBrace.Base"
 #r "Nessos.MBrace.Store"
 #r "Nessos.MBrace.Client"
-#r "Nessos.MBrace.Lib"
+
+#r "../lib/bin/Debug/Nessos.MBrace.Lib.dll"
 
 open Nessos.MBrace.Client
 
 type Node<'T> =  | N of 'T * List<ICloudRef<Node<'T>>>  
-                 //| E of 'T      //otan  den exei geitones
-
 type Graph<'T>= | G of List<ICloudRef<Node<'T>>>
-                | Empty of 'T
-
 
 [<Cloud>]
 let cloudNode node = 
@@ -84,8 +81,7 @@ let result = g.AwaitResult()
 
 let printNeighbors (graph : ICloudRef<Graph<'T>>) = 
     match graph.Value with
-        | Empty(_) -> printfn "Empty"
-        | G(nList) -> 
+            | G(nList) -> 
             nList |> List.iter (fun x -> 
                 match x.Value with                     
                     | N(id,nlist) ->                   
@@ -93,8 +89,5 @@ let printNeighbors (graph : ICloudRef<Graph<'T>>) =
                         nlist |> List.iter (fun n ->
                             match n.Value with                            
                             | N (id,_) -> printfn "%d," id) ) 
-   
 
 let gg =  printNeighbors result
-
-
