@@ -19,20 +19,21 @@ let cloudNode node =
         return! newRef <| N(node)
     }
 
-
+//////////////////////////////////////////////////////////
 [<Cloud>]
 let demo (number: int) : ICloud<int> =
     cloud {
         let! num =  
-            cloud { return 1+1 } 
-            <|>
-            cloud { 
-                Cloud.OfAsync <| Async.Sleep 5000
+            cloud {               
+               return 1+1 } 
+            <||>
+            cloud {            
+                Cloud.OfAsync <| Async.Sleep 5000  
                 return 1}
        
-        return! cloud { return num + number + 1 }
+        return! cloud { return fst num + number + 1 }
     }           
-
+//////////////////////////////////////////////////////////
 
 [<Cloud>]
 let addNeighbor (node1 : ICloudRef<Node<'T>>) (node2 : ICloudRef<Node<'T>>)  =
@@ -54,10 +55,12 @@ let n3 = (3,[])
 let n4 = (4,[])
 let n5 = (5,[])
 
-
 // create a local-only runtime
 let runtime = MBrace.InitLocal 4
-runtime.Run <@ demo 13 @>
+
+runtime.Run <@ demo 5 @>
+
+
 let n1' = runtime.CreateProcess <@ cloudNode n1 @>
 let n2' = runtime.CreateProcess <@ cloudNode n2 @>
 let n3' = runtime.CreateProcess <@ cloudNode n3 @>
@@ -77,6 +80,7 @@ let n5Ref' = n5_4.AwaitResult()
 //3->4
 let n3_4 = runtime.CreateProcess <@ addNeighbor n3Ref n4Ref @>
 let n3Ref' = n3_4.AwaitResult()
+
 //2->3
 let n2_3 = runtime.CreateProcess <@ addNeighbor n2Ref n3Ref' @>
 let n2Ref' = n2_3.AwaitResult()
@@ -91,9 +95,9 @@ let n1Ref'' = n1_5.AwaitResult()
 
 
 let g = runtime.CreateProcess <@ createCloudGraph2 [n1Ref'';n2Ref';n3Ref';n4Ref;n5Ref'] @>
-let result = g.AwaitResult()
+let result = g.AwaitResult()        //a graph
 
-
+//print each node and its neighbors
 let printNeighbors (graph : ICloudRef<Graph<'T>>) = 
     match graph.Value with
             | G(nList) -> 
@@ -105,4 +109,55 @@ let printNeighbors (graph : ICloudRef<Graph<'T>>) =
                             match n.Value with                            
                             | N (id,_) -> printfn "%d," id) ) 
 
-let gg =  printNeighbors result
+printNeighbors result
+
+//sum all node ids of the given list
+let rec sum (nlist : List<ICloudRef<Node<'T>>>) =
+    match nlist with
+        | head :: tail -> 
+            match head.Value with 
+                | N(id,_) -> id + sum tail
+        | [] -> 0
+
+
+//for each node in graph, print the node id and the sum of his neighbors' ids
+let sumN (graph : ICloudRef<Graph<'T>>) (sum : List<'I> -> int) = 
+    let sums = List.empty
+    match graph.Value with
+            | G(nList) -> 
+            nList |> List.iter (fun x -> 
+                match x.Value with                     
+                    | N(id,nlist) ->                   
+                        printf "Node %d: " id    
+                        printfn "%d" (sum nlist)
+                        ) 
+                        
+
+sumN result sum
+
+
+//average of all node ids of the given list
+let rec average (nlist : List<ICloudRef<Node<'T>>>) =
+    match nlist with
+    | head :: tail -> 
+        match head.Value with 
+            | N(id,_) -> 
+            let s = id + sum tail
+            s / nlist.Length
+    | [] -> 0
+
+
+
+//for each node in graph, print the node id and the average of his neighbors' ids
+let averageN (graph : ICloudRef<Graph<'T>>) (average : List<'I> -> int) = 
+    let sums = List.empty
+    match graph.Value with
+            | G(nList) -> 
+            nList |> List.iter (fun x -> 
+                match x.Value with                     
+                    | N(id,nlist) ->                   
+                        printf "Node %d: " id    
+                        printfn "%d" (average nlist)
+                        ) 
+
+averageN result average
