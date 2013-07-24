@@ -107,7 +107,8 @@ let printNeighbors (graph : ICloudRef<Graph<'T>>) =
                         printfn "Node %d: " id      
                         nlist |> List.iter (fun n ->
                             match n.Value with                            
-                            | N (id,_) -> printfn "%d," id) ) 
+                            | N (id,_) -> printfn "%d," id) 
+                            )            
 
 printNeighbors result
 
@@ -122,17 +123,19 @@ let rec sum (nlist : List<ICloudRef<Node<'T>>>) =
 
 //for each node in graph, print the node id and the sum of his neighbors' ids
 let sumN (graph : ICloudRef<Graph<'T>>) (sum : List<'I> -> int) = 
-    let sums = List.empty
+    let sums = ref List.empty
     match graph.Value with
             | G(nList) -> 
             nList |> List.iter (fun x -> 
                 match x.Value with                     
                     | N(id,nlist) ->                   
-                        printf "Node %d: " id    
-                        printfn "%d" (sum nlist)
+                        //printf "Node %d: " id    
+                        //printfn "%d" (sum nlist)
+                        sums := List.append !sums [(id,sum nlist)]                            
                         ) 
+    sums
+ 
                         
-
 sumN result sum
 
 
@@ -150,14 +153,18 @@ let rec average (nlist : List<ICloudRef<Node<'T>>>) =
 
 //for each node in graph, print the node id and the average of his neighbors' ids
 let averageN (graph : ICloudRef<Graph<'T>>) (average : List<'I> -> int) = 
-    let sums = List.empty
+    let av = ref List.empty
     match graph.Value with
             | G(nList) -> 
             nList |> List.iter (fun x -> 
                 match x.Value with                     
                     | N(id,nlist) ->                   
-                        printf "Node %d: " id    
-                        printfn "%d" (average nlist)
+                        //printf "Node %d: " id    
+                        //printfn "%d" (average nlist)
+                        av := List.append !av [(id,average nlist)]                            
                         ) 
+    av
+
 
 averageN result average
+
