@@ -20,7 +20,7 @@ let cloudNode node =
     }
    
 [<Cloud>]
-let createCloudGraph2 (nodes : List<IMutableCloudRef<Node<'T>>>) = 
+let createCloudGraph (nodes : List<IMutableCloudRef<Node<'T>>>) = 
     cloud {
         return! MutableCloudRef.New(G(nodes))
     }
@@ -71,5 +71,39 @@ let n_1 = runtime.Run <@ addNeighbor n1Ref n3Ref @>
 //1->5
 let n_1'= runtime.Run <@ addNeighbor n1Ref n5Ref @>
 
-let result = runtime.Run <@ createCloudGraph2 [n1Ref;n2Ref;n3Ref;n4Ref;n5Ref] @>
+let result = runtime.Run <@ createCloudGraph [n1Ref;n2Ref;n3Ref;n4Ref;n5Ref] @>
+
+/////////////////////////////PRINT/////////////////////////////////////////////
+//get neighbors list from graph
+[<Cloud>]
+let getN (graph : IMutableCloudRef<Graph<'T>>) =   
+    cloud {
+        let! g = MutableCloudRef.Read(graph)
+        match g with 
+            | G(mutableNodes) -> return mutableNodes                                            
+    }
+
+let mutableNodes = runtime.Run <@ getN result @>
+
+//return current's node id,neighbors
+[<Cloud>]
+let printN (node : IMutableCloudRef<Node<int>>) =     
+    cloud {        
+        let! nd = MutableCloudRef.Read node
+        match nd with 
+            | N(id,lst) -> return (id,lst)
+    } 
     
+//print all nodes and neighbors
+let printGr (nodes : List<IMutableCloudRef<Node<int>>>)  =
+    for i in nodes do
+        let proc = runtime.CreateProcess <@ printN i @>
+        let (id,lst) = proc.AwaitResult()
+        printfn "Node: %d" id
+        for j in lst do
+            let proc' = runtime.CreateProcess <@ printN j @>
+            let (id',lst') = proc'.AwaitResult()
+            printfn "   Neighbor %d" id'
+
+printGr mutableNodes
+//////////////////////////////////////////////////////////////////////////
