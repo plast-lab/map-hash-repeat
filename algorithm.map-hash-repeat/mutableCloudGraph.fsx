@@ -73,7 +73,7 @@ let n_1'= runtime.Run <@ addNeighbor n1Ref n5Ref @>
 
 let result = runtime.Run <@ createCloudGraph [n1Ref;n2Ref;n3Ref;n4Ref;n5Ref] @>
 
-/////////////////////////////PRINT/////////////////////////////////////////////
+
 //get neighbors list from graph
 [<Cloud>]
 let getN (graph : IMutableCloudRef<Graph<'T>>) =   
@@ -85,9 +85,11 @@ let getN (graph : IMutableCloudRef<Graph<'T>>) =
 
 let mutableNodes = runtime.Run <@ getN result @>
 
+/////////////////////////////PRINT/////////////////////////////////////////////
+
 //return current's node id,neighbors
 [<Cloud>]
-let printN (node : IMutableCloudRef<Node<int>>) =     
+let getData (node : IMutableCloudRef<Node<'T>>) =     
     cloud {        
         let! nd = MutableCloudRef.Read node
         match nd with 
@@ -95,15 +97,53 @@ let printN (node : IMutableCloudRef<Node<int>>) =
     } 
     
 //print all nodes and neighbors
-let printGr (nodes : List<IMutableCloudRef<Node<int>>>)  =
+let printGr (nodes : List<IMutableCloudRef<Node<'T>>>)  =
     for i in nodes do
-        let proc = runtime.CreateProcess <@ printN i @>
+        let proc = runtime.CreateProcess <@ getData i @>
         let (id,lst) = proc.AwaitResult()
         printfn "Node: %d" id
         for j in lst do
-            let proc' = runtime.CreateProcess <@ printN j @>
+            let proc' = runtime.CreateProcess <@ getData j @>
             let (id',lst') = proc'.AwaitResult()
             printfn "   Neighbor %d" id'
 
 printGr mutableNodes
 //////////////////////////////////////////////////////////////////////////
+
+//////////////////////////////SUM//////////////////////////////////////////
+let sum (nodes : List<IMutableCloudRef<Node<'T>>>) =     
+    let sums = ref List.empty
+    for i in nodes do
+        let proc = runtime.CreateProcess <@ getData i @>
+        let (id,lst) = proc.AwaitResult()
+        let tempS = ref 0
+        for j in lst do
+            let proc' = runtime.CreateProcess <@ getData j @>
+            let (id',lst') = proc'.AwaitResult()
+            tempS := !tempS + id'
+        //printfn "%d" !tempS
+        sums := List.append !sums [(id,!tempS)] 
+    sums                                   
+
+sum mutableNodes
+
+///////////////////////////////AVERAGE//////////////////////////////////////
+let average (nodes : List<IMutableCloudRef<Node<'T>>>) =   
+    let safediv x y =
+        match y with
+            | 0 -> None
+            | _ -> Some(x/y)
+    let av = ref List.empty
+    for i in nodes do
+        let proc = runtime.CreateProcess <@ getData i @>
+        let (id,lst) = proc.AwaitResult()
+        let tempS = ref 0
+        for j in lst do
+            let proc' = runtime.CreateProcess <@ getData j @>
+            let (id',lst') = proc'.AwaitResult()
+            tempS := !tempS + id'
+        //printfn "%d" !tempS
+        av := List.append !av [(id,safediv !tempS lst.Length)] 
+    av                                   
+
+average mutableNodes
