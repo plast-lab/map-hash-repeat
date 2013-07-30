@@ -128,22 +128,43 @@ let sum (nodes : List<IMutableCloudRef<Node<'T>>>) =
 sum mutableNodes
 
 ///////////////////////////////AVERAGE//////////////////////////////////////
-let average (nodes : List<IMutableCloudRef<Node<'T>>>) =   
+[<Cloud>]
+let sendToNeighbor v (neighbors : List<IMutableCloudRef<Node<'T>>>) = 
+        cloud {
+            let i = (new System.Random()).Next(0, neighbors.Length-1)              
+            let! N(id,lst) = MutableCloudRef.Read(neighbors.[i])                
+            let! s = MutableCloudRef.Set(neighbors.[i],N(v,lst))        
+            return i
+        }
+
+let average (nodes : List<IMutableCloudRef<Node<'T>>>) =         
     let safediv x y =
         match y with
-            | 0 -> None
-            | _ -> Some(x/y)
-    let av = ref List.empty
+            | 0 -> x
+            | _ -> x/y
+    //let av = ref List.empty
     for i in nodes do
         let proc = runtime.CreateProcess <@ getData i @>
         let (id,lst) = proc.AwaitResult()
+        let isEmpty = 
+            match lst with
+                | [] -> true
+                | _ -> false
         let tempS = ref 0
-        for j in lst do
-            let proc' = runtime.CreateProcess <@ getData j @>
-            let (id',lst') = proc'.AwaitResult()
-            tempS := !tempS + id'
-        //printfn "%d" !tempS
-        av := List.append !av [(id,safediv !tempS lst.Length)] 
-    av                                   
-
+        if isEmpty then
+            tempS := 0
+        else             
+            for j in lst do
+                let proc' = runtime.CreateProcess <@ getData j @>
+                let (id',lst') = proc'.AwaitResult()
+                tempS := !tempS + id'
+            //printfn "%d" !tempS
+            //let x = runtime.Run <@ sendToNeighbor (safediv !tempS lst.Length) lst @>            //average
+            let x = runtime.Run <@ sendToNeighbor !tempS lst @>         //sum   
+            printfn "%d" x
+            //av := List.append !av [(id,safediv !tempS lst.Length)] 
+        //av  
+    
+//average mutableNodes
 average mutableNodes
+printGr mutableNodes
