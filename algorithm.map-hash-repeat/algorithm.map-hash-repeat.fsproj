@@ -46,6 +46,7 @@
     <None Include="graph.fsx" />
     <None Include="cloud_graph2.fsx" />
     <None Include="mutableCloudGraph.fsx" />
+    <None Include="simpleMapReduce.fsx" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="mscorlib" />
