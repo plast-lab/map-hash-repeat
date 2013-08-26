@@ -25,11 +25,17 @@ let ref2 = runtime.Run <@ cloudNode 2 @>
 let ref3 = runtime.Run <@ cloudNode 3 @>
 let ref4 = runtime.Run <@ cloudNode 4 @>
 let ref5 = runtime.Run <@ cloudNode 5 @>
+let ref6 = runtime.Run <@ cloudNode 6 @>
+let ref7 = runtime.Run <@ cloudNode 7 @>
+let ref8 = runtime.Run <@ cloudNode 8 @>
+let ref9 = runtime.Run <@ cloudNode 9 @>
+let ref10 = runtime.Run <@ cloudNode 10 @>
 
-let refs = [ref1;ref2;ref3;ref4;ref5]
+let refs = [ref1;ref2;ref3;ref4;ref5;ref6;ref7;ref8;ref9;ref10]
 
 let fn x = x * x
 
+//parallel
 [<Cloud>]
 let mapParallel (fn : int -> int) (refs : ICloudRef<Node<'T>> list) =   
     cloud {
@@ -46,8 +52,9 @@ let mapParallel (fn : int -> int) (refs : ICloudRef<Node<'T>> list) =
     } 
 
 
+//single worker node
 [<Cloud>]
-let mapSeq (fn : int -> int) (refs : ICloudRef<Node<'T>> list) =   
+let mapLocal (fn : int -> int) (refs : ICloudRef<Node<'T>> list) =   
      cloud {
         let map2 (fn : int -> int) (ref : ICloudRef<Node<'T>>) =  
             cloud {  
@@ -55,14 +62,12 @@ let mapSeq (fn : int -> int) (refs : ICloudRef<Node<'T>> list) =
                     | N(id) -> 
                         do! Cloud.OfAsync <| Async.Sleep 3000
                         return fn id
-            }
-        let jobs = [| for ref in refs -> map2 fn ref |]                   
-        let! results = Cloud.Parallel jobs
-        return Array.sum results
+            }       
+        let jobs = [| for ref in refs -> map2 fn ref  |] 
+        let! results = local <| Cloud.Parallel jobs
+        return Array.sum results                                    
     } 
-
-
 
 #time
 let sum1 = runtime.Run <@ mapParallel fn refs @>
-let sum2 = runtime.Run <@ mapSeq fn refs @>
+let sum2 = runtime.Run <@ mapLocal fn refs @>
