@@ -56,16 +56,20 @@ let mapParallel (fn : int -> int) (refs : ICloudRef<Node<'T>> list) =
 [<Cloud>]
 let mapLocal (fn : int -> int) (refs : ICloudRef<Node<'T>> list) =   
      cloud {
-        let map2 (fn : int -> int) (ref : ICloudRef<Node<'T>>) =  
+        let rec map2 (fn : int -> int) (refs : ICloudRef<Node<'T>> list) total =  
             cloud {  
-                match ref.Value with
-                    | N(id) -> 
-                        do! Cloud.OfAsync <| Async.Sleep 3000
-                        return fn id
+                match refs with
+                    | [] -> 
+                        return total
+                    | hd :: tl ->
+                        match hd.Value with
+                            | N(id) -> 
+                                do! Cloud.OfAsync <| Async.Sleep 3000
+                                let ntotal = (fn id) + total
+                                return! map2 fn tl ntotal
             }       
-        let jobs = [| for ref in refs -> map2 fn ref  |] 
-        let! results = local <| Cloud.Parallel jobs
-        return Array.sum results                                    
+        let! result = map2 fn refs 0
+        return result        
     } 
 
 #time
