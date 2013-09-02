@@ -20,26 +20,35 @@ let cloudNode node =
     }
    
 [<Cloud>]
-let createCloudGraph (nodes : List<IMutableCloudRef<Node<'T>>>) = 
+let createCloudGraph (nodes : IMutableCloudRef<Node<'T>> list) = 
     cloud {
         return! MutableCloudRef.New(G(nodes))
     }
 
-let n1 = (1,[])
-let n2 = (2,[])
-let n3 = (3,[])
-let n4 = (4,[])
-let n5 = (5,[])
+[<Cloud>]
+let rec sequence (list:  ICloud<'T> list) : ICloud<'T list> = 
+    cloud {   
+        match list with 
+            | [] -> return List.empty
+            | x::xs -> 
+                let! v = x
+                let! vs = sequence xs
+                return v :: vs
+    }
+
+[<Cloud>]
+let initCloudGraph () = 
+    cloud {
+        let! res = Array.map cloudNode [| for i in 1..5 ->  (i, []) |] |> Array.toList |> sequence
+        return! createCloudGraph res
+    }
 
 // create a local-only runtime
 let runtime = MBrace.InitLocal 4
 
-let n1Ref = runtime.Run <@ cloudNode n1 @>
-let n2Ref = runtime.Run <@ cloudNode n2 @>
-let n3Ref = runtime.Run <@ cloudNode n3 @>
-let n4Ref = runtime.Run <@ cloudNode n4 @>
-let n5Ref = runtime.Run <@ cloudNode n5 @>
-
+// Waiting for an answer from http://www.m-brace.net/forums/topic/sequence-in-the-cloud/
+// First hint is that it is an mbrace bug
+let graph = runtime.Run <@ initCloudGraph () @>
 
 [<Cloud>]
 let addNeighbor (node1 : IMutableCloudRef<Node<'T>>) (node2 : IMutableCloudRef<Node<'T>>) =
@@ -47,7 +56,7 @@ let addNeighbor (node1 : IMutableCloudRef<Node<'T>>) (node2 : IMutableCloudRef<N
         let! n1 = MutableCloudRef.Read node1
         match n1 with
             | N(id,[]) -> 
-                let! _ = MutableCloudRef.Force(node1,N(id,[node2]))
+                let! _ = MutableCloudRef.Force(node1, N(id,[node2]))
                 return! MutableCloudRef.Read(node1)
             | N (id,nList) -> 
                 let! _ = MutableCloudRef.Force(node1,N(id,List.append nList [node2]))
