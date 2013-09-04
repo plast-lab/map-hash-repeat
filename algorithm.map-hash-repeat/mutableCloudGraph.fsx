@@ -1,6 +1,4 @@
-﻿
-// BEGIN PREAMBLE -- do not evaluate, for intellisense only
-#r "Nessos.MBrace.Utils"
+﻿#r "Nessos.MBrace.Utils"
 #r "Nessos.MBrace.Actors"
 #r "Nessos.MBrace.Base"
 #r "Nessos.MBrace.Store"
@@ -26,6 +24,17 @@ let createCloudGraph (nodes : IMutableCloudRef<Node<'T>> list) =
     }
 
 [<Cloud>]
+let rec seqMap (f : 'T -> ICloud<'S>) (inputs : 'T list) : ICloud<'S list> =
+    cloud {
+        match inputs with
+        | [] -> return []
+        | x :: xs ->
+            let! v = f x
+            let! vs = seqMap f xs
+            return v :: vs
+    }
+
+[<Cloud>]
 let rec sequence (list:  ICloud<'T> list) : ICloud<'T list> = 
     cloud {   
         match list with 
@@ -39,15 +48,13 @@ let rec sequence (list:  ICloud<'T> list) : ICloud<'T list> =
 [<Cloud>]
 let initCloudGraph () = 
     cloud {
-        let! res = Array.map cloudNode [| for i in 1..5 ->  (i, []) |] |> Array.toList |> sequence
+        let! res = [| for i in 1..5 ->  (i, []) |] |> Array.toList |> seqMap cloudNode
         return! createCloudGraph res
     }
 
 // create a local-only runtime
 let runtime = MBrace.InitLocal 4
 
-// Waiting for an answer from http://www.m-brace.net/forums/topic/sequence-in-the-cloud/
-// First hint is that it is an mbrace bug
 let graph = runtime.Run <@ initCloudGraph () @>
 
 [<Cloud>]
