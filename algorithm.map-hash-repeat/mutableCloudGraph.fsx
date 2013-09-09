@@ -33,7 +33,8 @@ let rec seqMap (f : 'T -> ICloud<'S>) (inputs : 'T list) : ICloud<'S list> =
             let! vs = seqMap f xs
             return v :: vs
     }
-
+(*
+//bug
 [<Cloud>]
 let rec sequence (list:  ICloud<'T> list) : ICloud<'T list> = 
     cloud {   
@@ -44,21 +45,175 @@ let rec sequence (list:  ICloud<'T> list) : ICloud<'T list> =
                 let! vs = sequence xs
                 return v :: vs
     }
+*)
 
+//initialize graph with num nodes
 [<Cloud>]
-let initCloudGraph () = 
+let initCloudGraph num = 
     cloud {
-        let! res = [| for i in 1..5 ->  (i, []) |] |> Array.toList |> seqMap cloudNode
+        let! res = [| for i in 1..num ->  (i, []) |] |> Array.toList |> seqMap cloudNode
         return! createCloudGraph res
     }
 
 // create a local-only runtime
 let runtime = MBrace.InitLocal 4
 
-let graph = runtime.Run <@ initCloudGraph () @>
+let graph = runtime.Run <@ initCloudGraph 5 @>
 
+//returns all nodes in a list
 [<Cloud>]
-let addNeighbor (node1 : IMutableCloudRef<Node<'T>>) (node2 : IMutableCloudRef<Node<'T>>) =
+let printGraph (graph : IMutableCloudRef<Graph<'T>>) = 
+    let getNode (nodeRef : IMutableCloudRef<Node<'T>>) : ICloud<Node<'T>>= 
+        cloud {
+            return! MutableCloudRef.Read(nodeRef)        
+        }
+    cloud   {       
+        let! g = MutableCloudRef.Read(graph)
+        match g with
+            | G(nodes) ->                                                                                   
+                return! seqMap getNode nodes
+    }   
+    
+runtime.Run <@ printGraph graph @>
+
+//returns an array with process - reference of each node
+[<Cloud>]
+let getNodeRefs (graph : IMutableCloudRef<Graph<'T>>) = 
+    cloud {
+        let! gr = MutableCloudRef.Read(graph)
+        match gr with
+            | G(nodes) ->
+                return [|for i in nodes -> i |]
+    }
+
+runtime.Run <@ getNodeRefs graph @>
+
+
+//calculate the power of the id of each node (in parallel) and then sum the result 
+[<Cloud>]
+let powerSumParallel (graph : IMutableCloudRef<Graph<'T>>) = 
+    cloud   {       
+        let! g = MutableCloudRef.Read(graph)
+        match g with
+            | G(nodes) ->                                                           
+                let power (x : IMutableCloudRef<Node<'T>>)  =
+                    cloud {
+                        let! node = MutableCloudRef.Read(x)
+                        match node with
+                            | N(id,nl) ->
+                                do! Cloud.OfAsync <| Async.Sleep 3000
+                                return id*id
+                    }                              
+                let jobs = [| for node in nodes -> power node |]   
+                let! results = Cloud.Parallel jobs   
+                return Array.sum results
+    }
+
+#time
+runtime.Run <@ powerSumParallel graph @>
+
+//calculate the power of the id of each node (sequential) and then sum the result 
+[<Cloud>]
+let powerSumSequential (graph : IMutableCloudRef<Graph<'T>>) = 
+    cloud   {       
+        let! g = MutableCloudRef.Read(graph)
+        match g with
+            | G(nodes) ->                              
+                let power (x : IMutableCloudRef<Node<'T>>)  =
+                    cloud {
+                        let! node = MutableCloudRef.Read(x)
+                        match node with
+                            | N(id,nl) ->
+                                do! Cloud.OfAsync <| Async.Sleep 3000
+                                return id*id
+                    }                                        
+                let! results = seqMap power nodes
+                return List.sum results
+    }
+
+runtime.Run <@ powerSumSequential graph @>
+
+
+//add a new node (id,neighborsList) in graph
+[<Cloud>]
+let addToGraph (node :('T*'a list)) (graph : IMutableCloudRef<Graph<'T>>) = 
+    cloud {
+        let! nodeRef = cloudNode node
+        let! g = MutableCloudRef.Read(graph)
+        match g with 
+            | G(nodes) ->
+                let n = List.append nodes [nodeRef]
+                let! _ =  MutableCloudRef.Force(graph,G(n))
+                return graph
+    }
+
+runtime.Run <@ addToGraph (6,[]) graph @>
+
+//adds node at node2Pos to the neighbors list at the node in node1Pos
+[<Cloud>]
+let addNeighbor (node1Pos : int) (node2Pos : int) (graph : IMutableCloudRef<Graph<'T>>) = 
+    cloud {                      
+        let! g = MutableCloudRef.Read(graph)
+        match g with 
+            | G(nodes) ->               
+                let node1 = nodes.[node1Pos]
+                let! n1 = MutableCloudRef.Read(node1) 
+                let node2 = nodes.[node2Pos]
+                match n1 with
+                    | N(id,list) ->
+                        let neighbors = List.append list [node2]
+                        let! _ = MutableCloudRef.Force(node1,N(id,neighbors))
+                        return graph            
+    }
+
+runtime.Run <@ addNeighbor 0 1 graph @>
+runtime.Run <@ addNeighbor 1 3 graph @>
+runtime.Run <@ addNeighbor 1 2 graph @>
+runtime.Run <@ addNeighbor 2 4 graph @>
+runtime.Run <@ addNeighbor 2 0 graph @>
+runtime.Run <@ addNeighbor 3 0 graph @>
+runtime.Run <@ addNeighbor 3 2 graph @>
+
+
+//calculate the power of the id of each neighbor and the result is the sum of the powers of every node
+[<Cloud>]
+let sumNeighbors (graph : IMutableCloudRef<Graph<'T>>) = 
+    cloud   {       
+        let! g = MutableCloudRef.Read(graph)
+        match g with
+            | G(nodes) ->                     
+                let myPower (n : IMutableCloudRef<Node<'T>> ) =
+                    cloud {
+                        let! node = MutableCloudRef.Read(n)
+                        match node with
+                            | N(id,nList) ->
+                                let power (x : IMutableCloudRef<Node<'T>>)  =
+                                    cloud {
+                                        let! node = MutableCloudRef.Read(x)
+                                        match node with
+                                            | N(id,nl) ->
+                                                do! Cloud.OfAsync <| Async.Sleep 3000
+                                                return id*id
+                                    }                              
+                                return! seqMap power nList
+                    }    
+                let jobs = [| for node in nodes -> myPower node|]
+                let! results = Cloud.Parallel jobs   
+                //let! results = seqMap myPower nodes     //seq
+                return [|for i in results -> List.sum i|]
+    }
+
+runtime.Run <@ sumNeighbors graph @>
+
+
+
+
+
+
+
+///////////////////////////////////////////////////////////////////////////////////////////////
+[<Cloud>]
+let addNeighbor1 (node1 : IMutableCloudRef<Node<'T>>) (node2 : IMutableCloudRef<Node<'T>>) =
     cloud {
         let! n1 = MutableCloudRef.Read node1
         match n1 with
