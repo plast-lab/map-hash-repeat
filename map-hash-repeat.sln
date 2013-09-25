@@ -7,6 +7,8 @@ Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "algorithm.map-reduce", "alg
 EndProject
 Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Nessos.MBrace.Lib", "lib\Nessos.MBrace.Lib.fsproj", "{255737AA-9364-4E25-88E1-EC3E3ACC650D}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{87B92427-114B-4853-9162-F43AA2CF9655}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug CLUSTER|Any CPU = Debug CLUSTER|Any CPU

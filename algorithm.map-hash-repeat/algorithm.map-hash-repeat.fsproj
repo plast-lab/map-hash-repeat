@@ -48,6 +48,7 @@
     <None Include="mutableCloudGraph.fsx" />
     <None Include="simpleMapReduce.fsx" />
     <None Include="DemoSimpleMapReduce.fsx" />
+    <None Include="mapRehashRepeat.fsx" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="mscorlib" />
