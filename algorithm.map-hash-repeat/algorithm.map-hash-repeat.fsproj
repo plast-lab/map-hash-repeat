@@ -49,6 +49,7 @@
     <None Include="simpleMapReduce.fsx" />
     <None Include="DemoSimpleMapReduce.fsx" />
     <None Include="mapRehashRepeat.fsx" />
+    <None Include="mapRehashRepeatAverage.fsx" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="mscorlib" />
