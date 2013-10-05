@@ -34,7 +34,7 @@ let createNeighbors (nodes : Node<'Id,'newV,'oldV> list) (nList : List<int*int>)
     
 
 //average
-let compute (vals : int list) = 
+let compute (vals : 'a list) = 
     List.sum vals / vals.Length
 
 
