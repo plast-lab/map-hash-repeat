@@ -10,6 +10,89 @@
 
 open Nessos.MBrace.Client
 
+//id,new value, old value
+type Node<'Id,'newV,'oldV> = | N of 'Id*'newV*'oldV
+
+[<Cloud>]
+let rec seqMap (f : 'T -> ICloud<'S>) (inputs : 'T list) : ICloud<'S list> =
+    cloud {
+        match inputs with
+        | [] -> return []
+        | x :: xs ->
+            let! v = f x
+            let! vs = seqMap f xs
+            return v :: vs
+    }
+
+//creates num Nodes with random new value (1..10)                   
+[<Cloud>]
+let createNodes (num : int)= cloud {    
+    let rnd = System.Random()  
+    return! [| for n in 0 .. num -> (n,rnd.Next (1,11),0) |] |> Array.toList |> seqMap (fun node -> MutableCloudRef.New(N(node)))        
+}        
+
+let createNeighbors (nodes : IMutableCloudRef<Node<'Id,'newV,'oldV>> list) (nList : List<int*int>) = 
+    [| for n in nList ->
+        match n with
+            | (parent,neighbor) ->
+                (parent,neighbor)
+    |] 
+    |> Seq.groupBy fst |> Seq.map (fun (key,values) -> (key,values |> Seq.map (fun (k1,v1) -> v1) |> Set.ofSeq)) 
+    |> Seq.toArray 
+    |> Map.ofArray
+
+
+
+//average
+let compute (vals : 'a list) = 
+    List.sum vals / vals.Length
+
+
+[<Cloud>]
+let rec mapRehashRepeat (nodes : IMutableCloudRef<Node<'Id,'newV,'oldV>> list) 
+                    (neighbors : Map<'id,Set<'id>>) 
+                    compute isDone finish = cloud {
+
+    //get the neighbors (refs) of the given node                             
+    let receive (node : IMutableCloudRef<Node<'Id,'newV,'oldV>> ) = cloud {
+        let! cloudNode = MutableCloudRef.Read(node)
+        match cloudNode with
+            | N(id,_,_) ->
+                let myNeighborsSet = Map.filter (fun key value -> key = id) neighbors 
+                                    |> Map.toArray 
+                                    |> Array.map (fun (key,value) -> value) 
+                return [| for n in myNeighborsSet.[0] -> nodes.[n] |]                   
+    }    
+    //return! receive nodes.[0]
+    
+    //sets the new value of the given node changes to the average. old value is the previous new value
+    let changeV (node : IMutableCloudRef<Node<'Id,'newV,'oldV>> ) comp = cloud {
+        let! cloudNode = MutableCloudRef.Read(node)
+        match cloudNode with        
+            |N(id,currentV,oldv)  ->                
+                let newData = (id,comp,currentV)                 
+                do! MutableCloudRef.Force(node,N(newData))                
+    }
+                           
+    return () 
+}
+    
+
+let finish = ref true
+let runtime = MBrace.InitLocal 4
+let nodes = runtime.Run <@ createNodes 6 @>
+let neighbors = createNeighbors nodes [(0,1);(1,0);(1,2);(2,1);(1,3);(3,1);(2,4);(4,2);(3,4);(4,3);(4,5);(5,4)]
+let nn = runtime.Run <@ mapRehashRepeat nodes neighbors compute (fun () -> ()) finish @>
+
+
+
+
+[<Cloud>]
+let printCloudNodes (nodes : IMutableCloudRef<Node<'Id,'newV,'oldV>> list)= cloud {
+    return! seqMap (fun node -> MutableCloudRef.Read(node)) nodes
+}
+
+runtime.Run <@ printCloudNodes nodes @>
 (*
 //id,new value, old value
 type Node<'Id,'newV,'oldV> = | N of IMutableCloudRef<('Id*'newV*'oldV)>
@@ -85,6 +168,8 @@ runtime.Run <@printN nodes @>
 ///
 *)
 
+//2nd attemp
+(*
 type Node<'Id,'newV,'oldV> = | N of IMutableCloudRef<'Id*'newV*'oldV> 
 
 ///
@@ -214,3 +299,5 @@ let readNode nodes = cloud {
 }
     
 runtime.Run <@ readNode nodes @>
+
+*)
