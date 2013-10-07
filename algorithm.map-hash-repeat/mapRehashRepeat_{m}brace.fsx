@@ -50,21 +50,19 @@ let compute (vals : 'a list) =
 
 [<Cloud>]
 let rec mapRehashRepeat (nodes : IMutableCloudRef<Node<'Id,'newV,'oldV>> list) 
-                    (neighbors : Map<'id,Set<'id>>) 
-                    compute isDone finish = cloud {
+                        (neighbors : Map<'nodeId,Set<'nodeId>>) 
+                        compute isDone finish = cloud {
 
-    //get the neighbors (refs) of the given node                             
-    let receive (node : IMutableCloudRef<Node<'Id,'newV,'oldV>> ) = cloud {
+    //get the neighbors REFS of the given node                             
+    let getNeighbors (node : IMutableCloudRef<Node<'Id,'newV,'oldV>> ) = cloud {
         let! cloudNode = MutableCloudRef.Read(node)
         match cloudNode with
-            | N(id,_,_) ->
-                let myNeighborsSet = Map.filter (fun key value -> key = id) neighbors 
-                                    |> Map.toArray 
-                                    |> Array.map (fun (key,value) -> value) 
-                return [| for n in myNeighborsSet.[0] -> nodes.[n] |]                   
-    }    
-    //return! receive nodes.[0]
-    
+            | N(id,_,_) when Map.containsKey id neighbors ->                
+                return neighbors.[id] |> Set.toList |> List.map (fun id -> nodes.[id])
+            | N(id,_,_) -> return []
+    } 
+    //return! seqMap getNeighbors nodes
+   
     //sets the new value of the given node changes to the average. old value is the previous new value
     let changeV (node : IMutableCloudRef<Node<'Id,'newV,'oldV>> ) comp = cloud {
         let! cloudNode = MutableCloudRef.Read(node)
@@ -73,8 +71,46 @@ let rec mapRehashRepeat (nodes : IMutableCloudRef<Node<'Id,'newV,'oldV>> list)
                 let newData = (id,comp,currentV)                 
                 do! MutableCloudRef.Force(node,N(newData))                
     }
-                           
-    return () 
+
+    let newVals (node : IMutableCloudRef<Node<'Id,'newV,'oldV>> ) = cloud {
+        
+        //gets the newv from the given node
+        let getNewV (node : IMutableCloudRef<Node<'Id,'newV,'oldV>> ) = cloud {
+                let! cloudNode = MutableCloudRef.Read(node)
+                match cloudNode with
+                    | N(_,newv,_)  ->                 
+                        return newv    
+        }
+        //get neighbors REFS from the given node
+        let! neighborRefs = getNeighbors node   
+        //concatenate given node's newv with the neighbors' newv and return a list with tuples: (nodeId,newvs)
+        let! cloudNode = MutableCloudRef.Read(node)
+        match cloudNode with   
+            | N(id,_,_) ->
+                let! neighborVals = seqMap getNewV neighborRefs 
+                let! myVal = getNewV node
+                return (id, [myVal] @ neighborVals)
+    }
+    //the newv of the neighbors
+    let vals = [|for node in nodes -> newVals node|] 
+    let! results = Cloud.Parallel vals 
+    //return results |> Map.ofArray 
+    let newVals = results |> Map.ofArray
+    let av = [| for node in nodes ->
+                cloud {
+                    let! cloudNode = MutableCloudRef.Read(node)
+                    match cloudNode with   
+                    | N(id,_,_) ->
+                        let vals = newVals.[id]
+                        return (id,compute vals)
+                } 
+            |]   
+    let! averagesArr = Cloud.Parallel av
+    let averages = averagesArr |> Map.ofArray
+    for node in nodes do
+        let comp = newVals.[node]
+    
+    return ()            
 }
     
 
@@ -83,8 +119,6 @@ let runtime = MBrace.InitLocal 4
 let nodes = runtime.Run <@ createNodes 6 @>
 let neighbors = createNeighbors nodes [(0,1);(1,0);(1,2);(2,1);(1,3);(3,1);(2,4);(4,2);(3,4);(4,3);(4,5);(5,4)]
 let nn = runtime.Run <@ mapRehashRepeat nodes neighbors compute (fun () -> ()) finish @>
-
-
 
 
 [<Cloud>]
