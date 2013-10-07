@@ -7,6 +7,7 @@ type Node<'Id,'newV,'oldV> = | N of ('Id*'newV*'oldV) ref
 let createNodes num = 
     let rnd = System.Random()    
     List.init num (fun n -> N(ref (n,rnd.Next (1,11),0)))
+    //test with mbrace//List.init num (fun n -> N(ref (n,n*n+1,0)))
     
 //manual
 (*
@@ -82,7 +83,7 @@ let rec mapRehashRepeat (nodes : Node<'Id,'newV,'oldV> list)
             mapRehashRepeat nodes neighbors compute isDone (ref true)
 
 let finish = ref true     
-let nodes = createNodes 6          
+let nodes = createNodes 6
 let neighbors = createNeighbors nodes [(0,1);(1,0);(1,2);(2,1);(1,3);(3,1);(2,4);(4,2);(3,4);(4,3);(4,5);(5,4)]
 mapRehashRepeat nodes neighbors compute (fun node comp -> match node with
                                                             |N(data) -> 
