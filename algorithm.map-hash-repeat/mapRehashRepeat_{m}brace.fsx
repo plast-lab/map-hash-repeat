@@ -26,13 +26,21 @@ let rec seqMap (f : 'T -> ICloud<'S>) (inputs : 'T list) : ICloud<'S list> =
 
 //creates num Nodes with random new value (1..10)                   
 [<Cloud>]
-let createNodes (num : int)= cloud {    
-    let rnd = System.Random()  
-    return! [| for n in 0 .. num-1 -> (n,rnd.Next (1,11),0) |] |> Array.toList |> seqMap (fun node -> MutableCloudRef.New(N(node)))        
+let createNodes (num : int) = cloud {    
+    let rnd = System.Random() 
+    let initVals = [| for n in 0 .. num-1 -> 
+                        cloud { 
+                            //let node = (n,rnd.Next (1,11),0)  //test with f#
+                            let node = (n,n*n+1,0)
+                            return! MutableCloudRef.New(N(node)) 
+                        }
+                    |] //|> Array.toList |> seqMap (fun node -> MutableCloudRef.New(N(node)))
+    return! Cloud.Parallel initVals
+    //return! [| for n in 0 .. num-1 -> (n,rnd.Next (1,11),0) |] |> Array.toList |> seqMap (fun node -> MutableCloudRef.New(N(node)))        
     //test with f#//return! [| for n in 0 .. num-1 -> (n,n*n+1,0) |] |> Array.toList |> seqMap (fun node -> MutableCloudRef.New(N(node)))        
 }        
 
-let createNeighbors (nodes : IMutableCloudRef<Node<'Id,'newV,'oldV>> list) (nList : List<int*int>) = 
+let createNeighbors (nodes : IMutableCloudRef<Node<'Id,'newV,'oldV>> []) (nList : List<int*int>) = 
     [| for n in nList ->
         match n with
             | (parent,neighbor) ->
@@ -50,7 +58,7 @@ let compute (vals : 'a list) =
 
 
 [<Cloud>]
-let rec mapRehashRepeat (nodes : IMutableCloudRef<Node<'Id,'newV,'oldV>> list) 
+let rec mapRehashRepeat (nodes : IMutableCloudRef<Node<'Id,'newV,'oldV>> []) 
                         (neighbors : Map<'nodeId,Set<'nodeId>>) 
                         compute isDone finish = cloud {
             
@@ -108,7 +116,8 @@ let rec mapRehashRepeat (nodes : IMutableCloudRef<Node<'Id,'newV,'oldV>> list)
             |]   
     let! averagesArr = Cloud.Parallel av
     let averages = averagesArr |> Map.ofArray
-    for node in (nodes |> List.toArray) do
+    //for node in (nodes |> List.toArray) do
+    for node in nodes do
         let! cloudNode = MutableCloudRef.Read(node)
         match cloudNode with   
             | N(id,_,_) when Map.containsKey id averages ->
@@ -138,8 +147,8 @@ let result = runtime.Run <@ mapRehashRepeat nodes neighbors compute (fun (node :
 
 
 [<Cloud>]
-let printCloudNodes (nodes : IMutableCloudRef<Node<'Id,'newV,'oldV>> list)= cloud {
-    return! seqMap (fun node -> MutableCloudRef.Read(node)) nodes
+let printCloudNodes (nodes : IMutableCloudRef<Node<'Id,'newV,'oldV>> [])= cloud {
+    return! seqMap (fun node -> MutableCloudRef.Read(node)) (nodes |> Array.toList)
 }
 
 runtime.Run <@ printCloudNodes nodes @>
