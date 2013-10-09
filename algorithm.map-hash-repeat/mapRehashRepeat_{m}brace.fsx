@@ -11,7 +11,7 @@
 open Nessos.MBrace.Client
 
 //id,new value, old value
-type Node<'Id,'newV,'oldV> = | N of 'Id*'newV*'oldV
+type Node<'Id,'newV,'oldV when 'Id : comparison > = | N of 'Id*'newV*'oldV* Set<'Id>
 
 [<Cloud>]
 let rec seqMap (f : 'T -> ICloud<'S>) (inputs : 'T list) : ICloud<'S list> =
@@ -28,16 +28,13 @@ let rec seqMap (f : 'T -> ICloud<'S>) (inputs : 'T list) : ICloud<'S list> =
 [<Cloud>]
 let createNodes (num : int) = cloud {    
     let rnd = System.Random() 
-    let initVals = [| for n in 0 .. num-1 -> 
-                        cloud { 
-                            let node = (n,rnd.Next (1,11),0)  
-                            let node = (n,n*n+1,0)  ////test with f#
+    let initVals = [| for n in 0 .. num-1 -> cloud { 
+                            let node = (n, rnd.Next (1,11), 0, Set.empty)  
+                            //let node = (n,n*n+1,0)  ////test with f#
                             return! MutableCloudRef.New(N(node)) 
-                        }
-                    |] //|> Array.toList |> seqMap (fun node -> MutableCloudRef.New(N(node)))
+                            }
+                    |]
     return! Cloud.Parallel initVals
-    //return! [| for n in 0 .. num-1 -> (n,rnd.Next (1,11),0) |] |> Array.toList |> seqMap (fun node -> MutableCloudRef.New(N(node)))        
-    //test with f#//return! [| for n in 0 .. num-1 -> (n,n*n+1,0) |] |> Array.toList |> seqMap (fun node -> MutableCloudRef.New(N(node)))        
 }        
 
 let createNeighbors (nodes : IMutableCloudRef<Node<'Id,'newV,'oldV>> []) (nList : List<int*int>) = 
@@ -142,7 +139,7 @@ let neighbors = createNeighbors nodes [(0,1);(1,0);(1,2);(2,1);(1,3);(3,1);(2,4)
 let result = runtime.Run <@ mapRehashRepeat nodes neighbors compute (fun (node : IMutableCloudRef<Node<'Id,'newV,'oldV>> ) comp -> cloud {
                                                                 let! cloudNode = MutableCloudRef.Read(node)
                                                                 match cloudNode with 
-                                                                    | N(id,currentV,oldV) -> return currentV = comp
+                                                                    | N(id, currentV, oldV) -> return currentV = comp
                                                                 }) finish @>                                                                     
 
 
