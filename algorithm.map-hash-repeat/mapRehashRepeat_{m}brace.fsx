@@ -30,8 +30,8 @@ let createNodes (num : int) = cloud {
     let rnd = System.Random() 
     let initVals = [| for n in 0 .. num-1 -> 
                         cloud { 
-                            //let node = (n,rnd.Next (1,11),0)  //test with f#
-                            let node = (n,n*n+1,0)
+                            let node = (n,rnd.Next (1,11),0)  
+                            let node = (n,n*n+1,0)  ////test with f#
                             return! MutableCloudRef.New(N(node)) 
                         }
                     |] //|> Array.toList |> seqMap (fun node -> MutableCloudRef.New(N(node)))
