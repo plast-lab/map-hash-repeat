@@ -5,12 +5,12 @@
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <SchemaVersion>2.0</SchemaVersion>
-    <ProjectGuid>7a0d1d42-cb5d-4f10-a1e9-a62d23e3c6e8</ProjectGuid>
+    <ProjectGuid>fe54f729-ed9b-4698-b5a0-de13e0e8595a</ProjectGuid>
     <OutputType>Exe</OutputType>
-    <RootNamespace>algorithm.map_hash_repeat</RootNamespace>
-    <AssemblyName>algorithm.map_hash_repeat</AssemblyName>
+    <RootNamespace>algorithm.test_map_hash_repeat</RootNamespace>
+    <AssemblyName>algorithm.test_map_hash_repeat</AssemblyName>
     <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
-    <Name>algorithm.map-hash-repeat</Name>
+    <Name>algorithm.test-map-hash-repeat</Name>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -21,7 +21,7 @@
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <WarningLevel>3</WarningLevel>
     <PlatformTarget>AnyCPU</PlatformTarget>
-    <DocumentationFile>bin\Debug\algorithm.map_hash_repeat.XML</DocumentationFile>
+    <DocumentationFile>bin\Debug\algorithm.test_map_hash_repeat.XML</DocumentationFile>
     <Prefer32Bit>true</Prefer32Bit>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
@@ -32,26 +32,9 @@
     <DefineConstants>TRACE</DefineConstants>
     <WarningLevel>3</WarningLevel>
     <PlatformTarget>AnyCPU</PlatformTarget>
-    <DocumentationFile>bin\Release\algorithm.map_hash_repeat.XML</DocumentationFile>
+    <DocumentationFile>bin\Release\algorithm.test_map_hash_repeat.XML</DocumentationFile>
     <Prefer32Bit>true</Prefer32Bit>
   </PropertyGroup>
-  <PropertyGroup>
-    <MinimumVisualStudioVersion Condition="'$(MinimumVisualStudioVersion)' == ''">11</MinimumVisualStudioVersion>
-  </PropertyGroup>
-  <Import Project="$(MSBuildExtensionsPath32)\..\Microsoft SDKs\F#\3.0\Framework\v4.0\Microsoft.FSharp.Targets" Condition=" Exists('$(MSBuildExtensionsPath32)\..\Microsoft SDKs\F#\3.0\Framework\v4.0\Microsoft.FSharp.Targets')" />
-  <ItemGroup>
-    <Compile Include="Utils.fs" />
-    <None Include="mapreduce.fsx" />
-    <None Include="cloud_graph.fsx" />
-    <None Include="graph.fsx" />
-    <None Include="cloud_graph2.fsx" />
-    <None Include="mutableCloudGraph.fsx" />
-    <None Include="simpleMapReduce.fsx" />
-    <None Include="DemoSimpleMapReduce.fsx" />
-    <None Include="mapRehashRepeat.fsx" />
-    <None Include="mapRehashRepeatAverage_FSharp.fsx" />
-    <None Include="mapRehashRepeat_{m}brace.fsx" />
-  </ItemGroup>
   <ItemGroup>
     <Reference Include="mscorlib" />
     <Reference Include="FSharp.Core, Version=4.3.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
@@ -61,6 +44,14 @@
     <Reference Include="System.Core" />
     <Reference Include="System.Numerics" />
   </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Program.fs" />
+    <None Include="App.config" />
+  </ItemGroup>
+  <PropertyGroup>
+    <MinimumVisualStudioVersion Condition="'$(MinimumVisualStudioVersion)' == ''">11</MinimumVisualStudioVersion>
+  </PropertyGroup>
+  <Import Project="$(MSBuildExtensionsPath32)\..\Microsoft SDKs\F#\3.0\Framework\v4.0\Microsoft.FSharp.Targets" Condition=" Exists('$(MSBuildExtensionsPath32)\..\Microsoft SDKs\F#\3.0\Framework\v4.0\Microsoft.FSharp.Targets')" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
   <Target Name="BeforeBuild">
