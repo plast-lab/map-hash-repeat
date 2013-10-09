@@ -50,6 +50,7 @@
     <None Include="DemoSimpleMapReduce.fsx" />
     <None Include="mapRehashRepeat.fsx" />
     <None Include="mapRehashRepeatAverage_FSharp.fsx" />
+    <None Include="mapRehashRepeat_{m}brace.fsx" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="mscorlib" />
