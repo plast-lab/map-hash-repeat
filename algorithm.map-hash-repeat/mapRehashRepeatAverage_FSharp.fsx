@@ -6,8 +6,8 @@ type Node<'Id,'newV,'oldV> = | N of ('Id*'newV*'oldV) ref
 //creates num Nodes with random new value (1..10)                   
 let createNodes num = 
     let rnd = System.Random()    
-    List.init num (fun n -> N(ref (n,rnd.Next (1,11),0)))
-    //test with mbrace//List.init num (fun n -> N(ref (n,n*n+1,0)))
+    //List.init num (fun n -> N(ref (n,rnd.Next (1,11),0)))
+    List.init num (fun n -> N(ref (n,n*n+1,0))) //test with mbrace
     
 //manual
 (*
