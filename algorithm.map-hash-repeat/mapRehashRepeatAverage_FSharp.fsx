@@ -33,11 +33,20 @@ let createNeighbors (nodes : Node<'Id,'newV,'oldV> list) (nList : List<int*int>)
     |> Map.ofArray
     
     
-
+(*
 //average
 let compute (vals : 'a list) = 
     List.sum vals / vals.Length
+*)
 
+//average
+let compute (vals : 'a list) = 
+    let rec fib n =
+        match n with
+        | 1 | 2 -> 1
+        | n -> fib(n-1) + fib(n-2)
+    let _ = fib 45 
+    List.sum vals / vals.Length
 
 let rec mapRehashRepeat (nodes : Node<'Id,'newV,'oldV> list) 
                     (neighbors : Map<Node<'Id,'newV,'oldV>,Set<Node<'Id,'newV,'oldV>>>) 
@@ -85,8 +94,8 @@ let rec mapRehashRepeat (nodes : Node<'Id,'newV,'oldV> list)
 let finish = ref true     
 let nodes = createNodes 6
 let neighbors = createNeighbors nodes [(0,1);(1,0);(1,2);(2,1);(1,3);(3,1);(2,4);(4,2);(3,4);(4,3);(4,5);(5,4)]
+
 mapRehashRepeat nodes neighbors compute (fun node comp -> match node with
                                                             |N(data) -> 
                                                                 let (id,currentV,oldv) = !data
                                                                 currentV = comp) finish
-

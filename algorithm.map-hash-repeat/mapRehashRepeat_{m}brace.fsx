@@ -37,7 +37,7 @@ let createNodes (num : int) = cloud {
     return! Cloud.Parallel initVals
 } 
 
-//each node contains his neighbors' ids
+//each node contains its neighbors' ids
 [<Cloud>]
 let createNeighbors (nodes : IMutableCloudRef<Node<'Id,'newV,'oldV>> []) (nArray :  ('id*'id) []) = cloud   {    
     for n in nArray do
@@ -67,13 +67,18 @@ let createNeighbors (nodes : IMutableCloudRef<Node<'Id,'newV,'oldV>> []) (nList 
 
 //average
 let compute (vals : 'a list) = 
+    let rec fib n =
+        match n with
+        | 1 | 2 -> 1
+        | n -> fib(n-1) + fib(n-2)
+    let _ = fib 45 
     List.sum vals / vals.Length
 
 
 [<Cloud>]
 let rec mapHashRepeat (nodes : IMutableCloudRef<Node<'Id,'newV,'oldV>> []) 
                         //(neighbors : Map<'nodeId,Set<'nodeId>>) 
-                        compute isDone finish = cloud {              
+                        compute isDone  = cloud {              
    
     //sets the new value of the given node changes to the average. old value is the previous new value
     let changeV (node : IMutableCloudRef<Node<'Id,'newV,'oldV>> ) comp = cloud {
@@ -116,7 +121,6 @@ let rec mapHashRepeat (nodes : IMutableCloudRef<Node<'Id,'newV,'oldV>> [])
     //the newv of the neighbors
     let vals = [|for node in nodes -> newVals node|] 
     let! results = Cloud.Parallel vals 
-    //return results |> Map.ofArray 
     let newVals = results |> Map.ofArray
     let av = [| for node in nodes ->
                 cloud {
@@ -129,25 +133,32 @@ let rec mapHashRepeat (nodes : IMutableCloudRef<Node<'Id,'newV,'oldV>> [])
             |]   
     let! averagesArr = Cloud.Parallel av
     let averages = averagesArr |> Map.ofArray
-    //for node in (nodes |> List.toArray) do
-    for node in nodes do
-        let! cloudNode = MutableCloudRef.Read(node)
-        match cloudNode with   
-            | N(id,_,_,_) when Map.containsKey id averages ->
-                let comp = averages.[id]
-                let! ok = isDone node comp
-                if not ok then
-                    finish := false
-                do! changeV node comp    
-        
-    match !finish with  
+    
+    let checkAll = 
+        [|
+            for node in nodes -> cloud {                   
+                let! cloudNode = MutableCloudRef.Read(node)
+                match cloudNode with   
+                    | N(id,_,_,_) when Map.containsKey id averages ->
+                        let comp = averages.[id]
+                        let! ok = isDone node comp
+                        //if not ok then
+                            //finish := false
+                        do! changeV node comp  
+                        return ok  
+            }
+        |]
+       
+    let! check = Cloud.Parallel checkAll 
+    let ok = check |> Seq.fold (fun acc item -> acc && item) true
+    match ok with  
         | true -> return nodes          
         | false -> 
-            return! mapHashRepeat nodes compute isDone (ref true)                                
+            return! mapHashRepeat nodes compute isDone //(ref true)                                
 }
     
 
-let finish = ref true
+//let finish = ref true
 let runtime = MBrace.InitLocal 4
 let nodes = runtime.Run <@ createNodes 6 @>
 runtime.Run <@ createNeighbors nodes [|(0,1);(1,0);(1,2);(1,3);(2,1);(2,4);(3,1);(3,4);(4,2);(4,3);(4,5);(5,4)|] @>
@@ -156,7 +167,7 @@ let result = runtime.Run <@ mapHashRepeat nodes compute (fun (node : IMutableClo
                                                                 let! cloudNode = MutableCloudRef.Read(node)
                                                                 match cloudNode with 
                                                                     | N(id, currentV, oldV,_) -> return currentV = comp
-                                                                }) finish @>                                                                     
+                                                                })  @>                                                                     
 
 
 [<Cloud>]
