@@ -40,13 +40,25 @@
     <Reference Include="FSharp.Core, Version=4.3.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
       <Private>True</Private>
     </Reference>
+    <Reference Include="Nessos.MBrace.Actors, Version=0.4.2.29545, Culture=neutral, PublicKeyToken=e3142f36c45d3d3d" />
+    <Reference Include="Nessos.MBrace.Base, Version=0.4.2.29545, Culture=neutral, PublicKeyToken=e3142f36c45d3d3d" />
+    <Reference Include="Nessos.MBrace.Client, Version=0.4.2.29545, Culture=neutral, PublicKeyToken=e3142f36c45d3d3d" />
+    <Reference Include="Nessos.MBrace.Store, Version=0.4.2.29545, Culture=neutral, PublicKeyToken=e3142f36c45d3d3d" />
+    <Reference Include="Nessos.MBrace.Utils, Version=0.4.2.29545, Culture=neutral, PublicKeyToken=e3142f36c45d3d3d" />
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Numerics" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Program.fs" />
     <None Include="App.config" />
+    <Compile Include="Client.fs" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\lib\Nessos.MBrace.Lib.fsproj">
+      <Name>Nessos.MBrace.Lib</Name>
+      <Project>{255737aa-9364-4e25-88e1-ec3e3acc650d}</Project>
+      <Private>True</Private>
+    </ProjectReference>
   </ItemGroup>
   <PropertyGroup>
     <MinimumVisualStudioVersion Condition="'$(MinimumVisualStudioVersion)' == ''">11</MinimumVisualStudioVersion>

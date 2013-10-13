@@ -84,6 +84,7 @@
     <Compile Include="Cloud.fs" />
     <Compile Include="Concurrency.fs" />
     <Compile Include="Memoization.fs" />
+    <Compile Include="MapHashRepeat.fs" />
   </ItemGroup>
   <PropertyGroup>
     <MinimumVisualStudioVersion Condition="'$(MinimumVisualStudioVersion)' == ''">11</MinimumVisualStudioVersion>
