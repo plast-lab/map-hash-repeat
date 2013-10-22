@@ -1,4 +1,5 @@
-﻿//map-rehash-repeat "average computation" in F# - {m}brace
+﻿//http://webdocs.cs.ualberta.ca/~zaiane/courses/cmput695/F07/exercises/Exercises695Clus-solution.pdf
+
 #r "Nessos.MBrace.Utils"
 #r "Nessos.MBrace.Actors"
 #r "Nessos.MBrace.Base"
