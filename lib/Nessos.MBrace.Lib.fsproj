@@ -65,27 +65,6 @@
     <DocumentationFile>bin\Debug\Nessos.MBrace.Lib.XML</DocumentationFile>
     <OutputPath>bin\Debug-AppDomain Isolation\</OutputPath>
   </PropertyGroup>
-  <ItemGroup>
-    <Reference Include="mscorlib" />
-    <Reference Include="FSharp.Core" />
-    <Reference Include="Nessos.MBrace.Base, Version=0.4.2.29545, Culture=neutral, PublicKeyToken=e3142f36c45d3d3d">
-      <SpecificVersion>True</SpecificVersion>
-    </Reference>
-    <Reference Include="Nessos.MBrace.Client, Version=0.4.2.29545, Culture=neutral, PublicKeyToken=e3142f36c45d3d3d">
-      <SpecificVersion>True</SpecificVersion>
-    </Reference>
-    <Reference Include="System" />
-    <Reference Include="System.Core" />
-    <Reference Include="System.Numerics" />
-  </ItemGroup>
-  <ItemGroup>
-    <Compile Include="Utils.fs" />
-    <Compile Include="MapReduce.fs" />
-    <Compile Include="Cloud.fs" />
-    <Compile Include="Concurrency.fs" />
-    <Compile Include="Memoization.fs" />
-    <Compile Include="MapHashRepeat.fs" />
-  </ItemGroup>
   <PropertyGroup>
     <MinimumVisualStudioVersion Condition="'$(MinimumVisualStudioVersion)' == ''">11</MinimumVisualStudioVersion>
   </PropertyGroup>
@@ -103,6 +82,27 @@
   <Import Project="$(MSBuildExtensionsPath32)\..\Microsoft SDKs\F#\3.0\Framework\v4.0\Microsoft.FSharp.Targets" Condition="Exists('$(MSBuildExtensionsPath32)\..\Microsoft SDKs\F#\3.0\Framework\v4.0\Microsoft.FSharp.Targets')" />
   <Import Project="$(MSBuildExtensionsPath32)\..\Microsoft F#\v4.0\Microsoft.FSharp.Targets" Condition="(!Exists('$(MSBuildExtensionsPath32)\..\Microsoft SDKs\F#\3.0\Framework\v4.0\Microsoft.FSharp.Targets')) And (Exists('$(MSBuildExtensionsPath32)\..\Microsoft F#\v4.0\Microsoft.FSharp.Targets'))" />
   <Import Project="$(MSBuildExtensionsPath32)\FSharp\1.0\Microsoft.FSharp.Targets" Condition="(!Exists('$(MSBuildExtensionsPath32)\..\Microsoft SDKs\F#\3.0\Framework\v4.0\Microsoft.FSharp.Targets')) And (!Exists('$(MSBuildExtensionsPath32)\..\Microsoft F#\v4.0\Microsoft.FSharp.Targets')) And (Exists('$(MSBuildExtensionsPath32)\FSharp\1.0\Microsoft.FSharp.Targets'))" />
+  <ItemGroup>
+    <Compile Include="Utils.fs" />
+    <Compile Include="MapReduce.fs" />
+    <Compile Include="Cloud.fs" />
+    <Compile Include="Concurrency.fs" />
+    <Compile Include="Memoization.fs" />
+    <Compile Include="MapHashRepeat.fs" />
+  </ItemGroup>
+  <ItemGroup>
+    <Reference Include="mscorlib" />
+    <Reference Include="FSharp.Core" />
+    <Reference Include="Nessos.MBrace.Base, Version=0.4.2.29545, Culture=neutral, PublicKeyToken=e3142f36c45d3d3d">
+      <SpecificVersion>True</SpecificVersion>
+    </Reference>
+    <Reference Include="Nessos.MBrace.Client, Version=0.4.2.29545, Culture=neutral, PublicKeyToken=e3142f36c45d3d3d">
+      <SpecificVersion>True</SpecificVersion>
+    </Reference>
+    <Reference Include="System" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Numerics" />
+  </ItemGroup>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
 	     Other similar extension points exist, see Microsoft.Common.targets.
 	<Target Name="BeforeBuild">
