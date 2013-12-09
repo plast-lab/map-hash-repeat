@@ -27,13 +27,14 @@ let rec seqMap (f : 'T -> ICloud<'S>) (inputs : 'T list) : ICloud<'S list> =
 [<Cloud>]
 let createNodes (num : int) = cloud {    
     let rnd = System.Random() 
-    let initVals = [| for n in 0 .. num-1 -> cloud { 
+    let! initVals = [| for n in 0 .. num-1 -> cloud { 
                             //let node = (n, rnd.Next (1,11), 0, Set.empty)  
                             let node = (n,n*n+1,0,Set.empty)        //test with f#
                             return! MutableCloudRef.New(N(node)) 
                             }
                     |]
-    return! Cloud.Parallel initVals
+                    |> Cloud.Parallel
+    return initVals
 } 
 
 //each node contains its neighbors' ids
@@ -48,6 +49,7 @@ let createNeighbors (nodes : IMutableCloudRef<Node<'Id,'newV,'oldV>> []) (nArray
                     | N(id,newv,oldv,setN) when parent = id ->                                          
                         do! MutableCloudRef.Force(node,N(id,newv,oldv,setN.Add(neighbor))) 
                     | N(id,newv,oldv,setN) -> ()
+    return nodes
 }
     
 
@@ -162,7 +164,7 @@ let rec mapHashRepeat (nodes : IMutableCloudRef<Node<'Id,'newV,'oldV>> [])
 //let finish = ref true
 let runtime = MBrace.InitLocal 4
 let nodes = runtime.Run <@ createNodes 6 @>
-runtime.Run <@ createNeighbors nodes [|(0,1);(1,0);(1,2);(1,3);(2,1);(2,4);(3,1);(3,4);(4,2);(4,3);(4,5);(5,4)|] @>
+let nodes1 = runtime.Run <@ createNeighbors nodes [|(0,1);(1,0);(1,2);(1,3);(2,1);(2,4);(3,1);(3,4);(4,2);(4,3);(4,5);(5,4)|] @>
 #time
 let result = runtime.Run <@ mapHashRepeat nodes compute (fun (node : IMutableCloudRef<Node<'Id,'newV,'oldV>> ) comp -> cloud {
                                                                 let! cloudNode = MutableCloudRef.Read(node)
@@ -176,6 +178,6 @@ let printCloudNodes (nodes : IMutableCloudRef<Node<'Id,'newV,'oldV>> [])= cloud 
     return! seqMap (fun node -> MutableCloudRef.Read(node)) (nodes |> Array.toList)
 }
 
-runtime.Run <@ printCloudNodes nodes @>
+runtime.Run <@ printCloudNodes nodes1 @>
 runtime.Run <@ printCloudNodes result @>
 
