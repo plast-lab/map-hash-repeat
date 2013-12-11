@@ -373,8 +373,7 @@ let rec mapHashRepeat (dataNodes : IMutableCloudRef<Node<'Id,'newV,'oldV>> [])
                       computeNeighbors
                       isDone  = cloud {              
    
-    //change old coords with the new coords
-    
+    //change the old set of ids with the new one (comp)
     let changeV (node : IMutableCloudRef<Node<'Id,'newV,'oldV>> ) comp = cloud {
         let! cloudNode = MutableCloudRef.Read(node)
         match cloudNode with        
