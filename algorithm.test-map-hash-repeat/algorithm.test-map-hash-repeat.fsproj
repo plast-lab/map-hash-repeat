@@ -50,6 +50,7 @@
     <None Include="kmeans.fsx" />
     <None Include="kmeans2.fsx" />
     <None Include="Average2.fsx" />
+    <None Include="kmeans_v1.fsx" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\lib\Nessos.MBrace.Lib.fsproj">
