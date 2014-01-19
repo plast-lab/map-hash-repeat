@@ -385,14 +385,15 @@ let rec mapHashRepeat (dataNodes : IMutableCloudRef<Node<'Id,'newV,'oldV>> [])
     let! newCenters = calcCenters dataNodes centers
 
     let distribute =         
-        Array.map (fun center -> cloud {
+        [|for center in centers -> cloud {
             let! cloudNode = MutableCloudRef.Read(center)
             match cloudNode with
                 | N(id,coords,oldSet,newSet)  ->                 
                     do! MutableCloudRef.Force(center,N(id,newCenters.[id],oldSet,newSet))
-        }) centers
-    let! _ = distribute |> Cloud.Parallel                
-
+        }
+        |]
+        |> Cloud.Parallel
+    
     let! neighborPairs = computeNeighbors dataNodes centers    
     
     let checkAll = 
