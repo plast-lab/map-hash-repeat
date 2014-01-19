@@ -93,6 +93,7 @@
   <ItemGroup>
     <Reference Include="mscorlib" />
     <Reference Include="FSharp.Core" />
+    <Reference Include="Nessos.MBrace, Version=0.4.4.13101, Culture=neutral, PublicKeyToken=e3142f36c45d3d3d" />
     <Reference Include="Nessos.MBrace.Base, Version=0.4.2.29545, Culture=neutral, PublicKeyToken=e3142f36c45d3d3d">
       <SpecificVersion>True</SpecificVersion>
     </Reference>

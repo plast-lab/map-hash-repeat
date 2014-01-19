@@ -5,15 +5,16 @@
 //to distribution 8a ginetai apo thn mapHashRepeat kai oxi apo ton xrhsth
 //allaxe i compute, twra epistrefei zeugaria centerId,newCoord ta opoia kai mesa sth mapHashRepeat oi nees 
 //oi palies suntetagmenes twn kentrwn allazoun me tis nees pou upologise i compute
-
+#r "Nessos.MBrace"
 #r "Nessos.MBrace.Utils"
+#r "Nessos.MBrace.Common"
 #r "Nessos.MBrace.Actors"
-#r "Nessos.MBrace.Base"
 #r "Nessos.MBrace.Store"
 #r "Nessos.MBrace.Client"
 
 #r "../lib/bin/Debug/Nessos.MBrace.Lib.dll"
 
+open Nessos.MBrace
 open Nessos.MBrace.Client
 
 //id,new value,old value, set<ids>
