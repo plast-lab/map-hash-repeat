@@ -1,6 +1,4 @@
-﻿//http://webdocs.cs.ualberta.ca/~zaiane/courses/cmput695/F07/exercises/Exercises695Clus-solution.pdf
-
-#r "Nessos.MBrace.Utils"
+﻿#r "Nessos.MBrace.Utils"
 #r "Nessos.MBrace.Actors"
 #r "Nessos.MBrace.Base"
 #r "Nessos.MBrace.Store"
@@ -8,6 +6,7 @@
 
 #r "../lib/bin/Debug/Nessos.MBrace.Lib.dll"
 
+open Nessos.MBrace
 open Nessos.MBrace.Client
 
 //id,new value,old value, set<ids>
@@ -26,7 +25,24 @@ let rec seqMap (f : 'T -> ICloud<'S>) (inputs : 'T list) : ICloud<'S list> =
             return v :: vs
     }
 
+//create random coordinates for nodes and centers
+[<Cloud>]
+let createNodes (numData : int) (k : int) = cloud {    
+    let rnd = System.Random() 
+    let! initVals = [| 
+                        for i in 1..numData ->
+                            MutableCloudRef.New(N((1,(rnd.Next(0,11) |> float,rnd.Next(0,11) |> float),(Set.empty : int Set),Set.empty)))
+                    |]
+                    |> Cloud.Parallel
+    let! initCenters = 
+        [|for i in 1..k -> 
+            MutableCloudRef.New(N((-i,(rnd.Next(0,11) |> float,rnd.Next(0,11) |> float),(Set.empty : int Set),Set.empty)))
+        |] 
+        |> Cloud.Parallel                                       
+    return Array.append initVals initCenters
+} 
 
+//--------------------------------EXAMPLES--------------------------------------------//
 //example-1    
 [<Cloud>]
 let createNodes1 (numData : int) (k : int) = cloud {    
@@ -43,8 +59,7 @@ let createNodes1 (numData : int) (k : int) = cloud {
                     |]
                     |> Cloud.Parallel
     let! initCenters = 
-        [|//for i in 1..k -> 
-            //MutableCloudRef.New(N((1,[|rnd.Next(0,11) |> float;rnd.Next(0,11) |> float|],(Set.empty : (float*float) Set),Set.empty)))
+        [|
             MutableCloudRef.New(N((-1,(1.0,1.0),(Set.empty : int Set),Set.empty)))
             MutableCloudRef.New(N((-2,(5.0,7.0),(Set.empty : int Set),Set.empty)))
         |] 
@@ -53,8 +68,6 @@ let createNodes1 (numData : int) (k : int) = cloud {
     return Array.append initVals initCenters
 } 
 
-
-//creates num Nodes with random new value (1..10)                   
 //example-2
 [<Cloud>]
 let createNodes2 (numData : int) (k : int) = cloud {    
@@ -68,12 +81,10 @@ let createNodes2 (numData : int) (k : int) = cloud {
                         MutableCloudRef.New(N((6,(6.0,4.0),(Set.empty : int Set),Set.empty)))
                         MutableCloudRef.New(N((7,(1.0,2.0),(Set.empty : int Set),Set.empty)))
                         MutableCloudRef.New(N((8,(4.0,9.0),(Set.empty : int Set),Set.empty)))
-                        
                     |]
                     |> Cloud.Parallel
     let! initCenters = 
-        [|//for i in 1..k -> 
-            //MutableCloudRef.New(N((1,[|rnd.Next(0,11) |> float;rnd.Next(0,11) |> float|],(Set.empty : (float*float) Set),Set.empty)))
+        [| 
             MutableCloudRef.New(N((-1,(2.0,10.0),(Set.empty : int Set),Set.empty)))
             MutableCloudRef.New(N((-2,(5.0,8.0),(Set.empty : int Set),Set.empty)))
             MutableCloudRef.New(N((-3,(1.0,2.0),(Set.empty : int Set),Set.empty)))
@@ -95,8 +106,7 @@ let createNodes3 (numData : int) (k : int) = cloud {
                     |]
                     |> Cloud.Parallel
     let! initCenters = 
-        [|//for i in 1..k -> 
-            //MutableCloudRef.New(N((1,[|rnd.Next(0,11) |> float;rnd.Next(0,11) |> float|],(Set.empty : (float*float) Set),Set.empty)))
+        [|
             MutableCloudRef.New(N((-1,(1.0,1.0),(Set.empty : int Set),Set.empty)))
             MutableCloudRef.New(N((-2,(2.0,1.0),(Set.empty : int Set),Set.empty)))
         |] 
@@ -131,8 +141,7 @@ let createNodes4 (numData : int) (k : int) = cloud {
                     |]
                     |> Cloud.Parallel
     let! initCenters = 
-        [|//for i in 1..k -> 
-            //MutableCloudRef.New(N((1,[|rnd.Next(0,11) |> float;rnd.Next(0,11) |> float|],(Set.empty : (float*float) Set),Set.empty)))
+        [|
             MutableCloudRef.New(N((-1,(9.0,3.0),(Set.empty : int Set),Set.empty)))
             MutableCloudRef.New(N((-2,(11.0,3.0),(Set.empty : int Set),Set.empty)))
         |] 
@@ -157,8 +166,7 @@ let createNodes5 (numData : int) (k : int) = cloud {
                     |]
                     |> Cloud.Parallel
     let! initCenters = 
-        [|//for i in 1..k -> 
-            //MutableCloudRef.New(N((1,[|rnd.Next(0,11) |> float;rnd.Next(0,11) |> float|],(Set.empty : (float*float) Set),Set.empty)))
+        [|
             MutableCloudRef.New(N((-1,(2.0,10.0),(Set.empty : int Set),Set.empty)))
             MutableCloudRef.New(N((-2,(5.0,8.0),(Set.empty : int Set),Set.empty)))
             MutableCloudRef.New(N((-3,(1.0,2.0),(Set.empty : int Set),Set.empty)))
@@ -168,6 +176,7 @@ let createNodes5 (numData : int) (k : int) = cloud {
     return Array.append initVals initCenters
 } 
 
+//-------------------------------------------------------------------------------------------//
 
 
 //each node contains its neighbors' ids
@@ -211,8 +220,6 @@ let createNeighbors (nodes : IMutableCloudRef<Node<'Id,'newV,'oldV>> []) = cloud
                                     |Some(ref) -> Some ref
                                     | None -> None)             
     //distance
-    //let dist (arr1 : float[]) (arr2 : float[]) = 
-    //    Array.fold2 (fun acc elem1 elem2 -> acc + pown (elem1 - elem2) 2) 0.0 arr1 arr2
     let dist (x1, y1) (x2, y2) : float =
         let xDistance = x1 - x2
         let yDistance = y1 - y2
@@ -312,16 +319,8 @@ let compute (nodes : IMutableCloudRef<Node<'Id,'newV,'oldV>> [])
     let newCenters = 
         Array.mapi2 (fun i x y  -> (-(i+1),(x,y))) xs ys
         |> Map.ofArray
-    //return newCenters.[-3]
-    //(*
-    let changeCenters =         
-        Array.map (fun center -> cloud {
-            let! cloudNode = MutableCloudRef.Read(center)
-            match cloudNode with
-                | N(id,coords,oldSet,newSet)  ->                 
-                    do! MutableCloudRef.Force(center,N(id,newCenters.[id],oldSet,newSet))
-        }) centers
-    return! changeCenters |> Cloud.Parallel               
+   
+   return newCenters
 }
 
 [<Cloud>]
@@ -369,11 +368,13 @@ let computeNeighbors (dataNodes : IMutableCloudRef<Node<'Id,'newV,'oldV>> [])
 [<Cloud>]
 let rec mapHashRepeat (dataNodes : IMutableCloudRef<Node<'Id,'newV,'oldV>> []) 
                       (centers : IMutableCloudRef<Node<'Id,'newV,'oldV>> []) 
-                      calcCenters  
+                      (calcCenters : (IMutableCloudRef<Node<'Id,'newV,'oldV>> [] ->
+                                     IMutableCloudRef<Node<'Id,'newV,'oldV>> [] ->
+                                     ICloud<Map<'I,'C>>))
                       computeNeighbors
                       isDone  = cloud {              
    
-    //change the old set of ids with the new one (comp)
+    //change the old set of ids(neighbors) with the new one (comp)
     let changeV (node : IMutableCloudRef<Node<'Id,'newV,'oldV>> ) comp = cloud {
         let! cloudNode = MutableCloudRef.Read(node)
         match cloudNode with        
@@ -382,10 +383,19 @@ let rec mapHashRepeat (dataNodes : IMutableCloudRef<Node<'Id,'newV,'oldV>> [])
                 do! MutableCloudRef.Force(node,N(newData))                
     }    
     
-    let! computations = calcCenters dataNodes centers 
-    let! neighborPairs = computeNeighbors dataNodes centers
-    //do! changeV centers.[0] computations.[-2]
+    let! newCenters = calcCenters dataNodes centers
+
+    let distribute =         
+        [|for center in centers -> cloud {
+            let! cloudNode = MutableCloudRef.Read(center)
+            match cloudNode with
+                | N(id,coords,oldSet,newSet)  ->                 
+                    do! MutableCloudRef.Force(center,N(id,newCenters.[id],oldSet,newSet))
+        }
+        |]
+        |> Cloud.Parallel
     
+    let! neighborPairs = computeNeighbors dataNodes centers    
     
     let checkAll = 
         [|
@@ -408,15 +418,6 @@ let rec mapHashRepeat (dataNodes : IMutableCloudRef<Node<'Id,'newV,'oldV>> [])
             return! mapHashRepeat dataNodes centers calcCenters computeNeighbors isDone //(ref true)  
     
 }
-    
-    
-
-let runtime = MBrace.InitLocal 4
-//number of data points, number of clusters, currently not used
-let allNodes = runtime.Run <@ createNodes1 7 2 @>
-let (nodes,centers) = runtime.Run <@ createNeighbors allNodes @>
-
-//let c = runtime.Run <@ compute nodes centers @>
 
 [<Cloud>]
 let isDone (node : IMutableCloudRef<Node<'Id,'newV,'oldV>> ) comp = cloud    {
@@ -424,15 +425,19 @@ let isDone (node : IMutableCloudRef<Node<'Id,'newV,'oldV>> ) comp = cloud    {
     match cloudNode with 
         | N(id, coords, setN,currentSet) -> return currentSet = comp   
 }
+    
+let runtime = MBrace.InitLocal 4
+//number of data points, number of clusters
+let allNodes = runtime.Run <@ createNodes 50 5 @>
+let (nodes,centers) = runtime.Run <@ createNeighbors allNodes @>
 
 let (finalNodes,finalCenters) = runtime.Run <@ mapHashRepeat nodes centers compute computeNeighbors isDone  @>                                                                     
 
+
+//---------------------------------------print results--------------------------------------------------//
 [<Cloud>]
 let printCloudNodes (nodes : IMutableCloudRef<Node<'Id,'newV,'oldV>> [])= cloud {
     return! seqMap (fun node -> MutableCloudRef.Read(node)) (nodes |> Array.toList)
 }
 
-runtime.Run <@ printCloudNodes nodes @>
-runtime.Run <@ printCloudNodes centers @>
-runtime.Run <@ printCloudNodes finalNodes @>
 runtime.Run <@ printCloudNodes finalCenters @>

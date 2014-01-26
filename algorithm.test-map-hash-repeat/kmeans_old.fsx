@@ -1,20 +1,13 @@
 ﻿//http://webdocs.cs.ualberta.ca/~zaiane/courses/cmput695/F07/exercises/Exercises695Clus-solution.pdf
 
-//initial copy from kmeans.fsx
-
-//to distribution 8a ginetai apo thn mapHashRepeat kai oxi apo ton xrhsth
-//allaxe i compute, twra epistrefei zeugaria centerId,newCoord ta opoia kai mesa sth mapHashRepeat oi nees 
-//oi palies suntetagmenes twn kentrwn allazoun me tis nees pou upologise i compute
-#r "Nessos.MBrace"
 #r "Nessos.MBrace.Utils"
-#r "Nessos.MBrace.Common"
 #r "Nessos.MBrace.Actors"
+#r "Nessos.MBrace.Base"
 #r "Nessos.MBrace.Store"
 #r "Nessos.MBrace.Client"
 
 #r "../lib/bin/Debug/Nessos.MBrace.Lib.dll"
 
-open Nessos.MBrace
 open Nessos.MBrace.Client
 
 //id,new value,old value, set<ids>
@@ -319,8 +312,16 @@ let compute (nodes : IMutableCloudRef<Node<'Id,'newV,'oldV>> [])
     let newCenters = 
         Array.mapi2 (fun i x y  -> (-(i+1),(x,y))) xs ys
         |> Map.ofArray
-   
-   return newCenters
+    //return newCenters.[-3]
+    //(*
+    let changeCenters =         
+        Array.map (fun center -> cloud {
+            let! cloudNode = MutableCloudRef.Read(center)
+            match cloudNode with
+                | N(id,coords,oldSet,newSet)  ->                 
+                    do! MutableCloudRef.Force(center,N(id,newCenters.[id],oldSet,newSet))
+        }) centers
+    return! changeCenters |> Cloud.Parallel               
 }
 
 [<Cloud>]
@@ -368,13 +369,11 @@ let computeNeighbors (dataNodes : IMutableCloudRef<Node<'Id,'newV,'oldV>> [])
 [<Cloud>]
 let rec mapHashRepeat (dataNodes : IMutableCloudRef<Node<'Id,'newV,'oldV>> []) 
                       (centers : IMutableCloudRef<Node<'Id,'newV,'oldV>> []) 
-                      (calcCenters : (IMutableCloudRef<Node<'Id,'newV,'oldV>> [] ->
-                                     IMutableCloudRef<Node<'Id,'newV,'oldV>> [] ->
-                                     ICloud<Map<'I,'C>>))
+                      calcCenters  
                       computeNeighbors
                       isDone  = cloud {              
    
-    //change the old set of ids(neighbors) with the new one (comp)
+    //change the old set of ids with the new one (comp)
     let changeV (node : IMutableCloudRef<Node<'Id,'newV,'oldV>> ) comp = cloud {
         let! cloudNode = MutableCloudRef.Read(node)
         match cloudNode with        
@@ -383,19 +382,10 @@ let rec mapHashRepeat (dataNodes : IMutableCloudRef<Node<'Id,'newV,'oldV>> [])
                 do! MutableCloudRef.Force(node,N(newData))                
     }    
     
-    let! newCenters = calcCenters dataNodes centers
-
-    let distribute =         
-        [|for center in centers -> cloud {
-            let! cloudNode = MutableCloudRef.Read(center)
-            match cloudNode with
-                | N(id,coords,oldSet,newSet)  ->                 
-                    do! MutableCloudRef.Force(center,N(id,newCenters.[id],oldSet,newSet))
-        }
-        |]
-        |> Cloud.Parallel
+    let! computations = calcCenters dataNodes centers 
+    let! neighborPairs = computeNeighbors dataNodes centers
+    //do! changeV centers.[0] computations.[-2]
     
-    let! neighborPairs = computeNeighbors dataNodes centers    
     
     let checkAll = 
         [|
@@ -419,9 +409,11 @@ let rec mapHashRepeat (dataNodes : IMutableCloudRef<Node<'Id,'newV,'oldV>> [])
     
 }
     
+    
+
 let runtime = MBrace.InitLocal 4
 //number of data points, number of clusters, currently not used
-let allNodes = runtime.Run <@ createNodes2 7 2 @>
+let allNodes = runtime.Run <@ createNodes1 7 2 @>
 let (nodes,centers) = runtime.Run <@ createNeighbors allNodes @>
 
 //let c = runtime.Run <@ compute nodes centers @>

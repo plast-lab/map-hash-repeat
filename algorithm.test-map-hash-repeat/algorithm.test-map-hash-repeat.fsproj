@@ -46,11 +46,10 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
-    <Compile Include="Client.fs" />
-    <None Include="kmeans.fsx" />
+    <None Include="kmeans_old.fsx" />
     <None Include="kmeans2.fsx" />
     <None Include="Average2.fsx" />
-    <None Include="kmeans_v1.fsx" />
+    <None Include="kmeans.fsx" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\lib\Nessos.MBrace.Lib.fsproj">

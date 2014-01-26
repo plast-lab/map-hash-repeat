@@ -1,4 +1,4 @@
-﻿//map-rehash-repeat "average computation" in F# - {m}brace
+﻿//map-rehash-repeat "average computation" in F# - {m}brace with fibonacci computation in compute function
 #r "Nessos.MBrace.Utils"
 #r "Nessos.MBrace.Actors"
 #r "Nessos.MBrace.Base"
@@ -28,8 +28,8 @@ let rec seqMap (f : 'T -> ICloud<'S>) (inputs : 'T list) : ICloud<'S list> =
 let createNodes (num : int) = cloud {    
     let rnd = System.Random() 
     let initVals = [| for n in 0 .. num-1 -> cloud { 
-                            //let node = (n, rnd.Next (1,11), 0, Set.empty)  
-                            let node = (n,n*n+1,0,Set.empty)        //test with f#
+                            let node = (n, rnd.Next (1,11), 0, Set.empty)  
+                            //let node = (n,n*n+1,0,Set.empty)        //test with f#
                             return! MutableCloudRef.New(N(node)) 
                             }
                     |]
